@@ -36,12 +36,9 @@ export default function TabLayout() {
     return () => unsubscribe();
   }, []);
 
-  // Función para renderizar los items del Sidebar de PC
   const SidebarItem = ({ name, label, icon, adminOnly = false }: any) => {
     if (adminOnly && role !== 'admin') return null;
     
-    // Mejoramos la detección de ruta activa para carpetas
-    // Si estamos en /prestamos/bitacora, el botón /prestamos debe seguir activo
     const isActive = pathname === name || (name !== '/' && pathname.startsWith(name));
     const activeColor = '#1976D2';
     const inactiveColor = isDark ? '#888' : '#666';
@@ -77,6 +74,7 @@ export default function TabLayout() {
           <SidebarItem name="/" label="Inicio" icon="home" />
           <SidebarItem name="/prestamos" label="Vales de Préstamo" icon="ticket" />
           <SidebarItem name="/usuarios" label="Gestión Usuarios" icon="people" adminOnly />
+          <SidebarItem name="/perfil" label="Mi Perfil" icon="person-circle" />
         </View>
       )}
 
@@ -87,7 +85,6 @@ export default function TabLayout() {
             headerShown: false,
             tabBarActiveTintColor: '#1976D2',
             tabBarInactiveTintColor: isDark ? '#888' : '#666',
-            
             tabBarStyle: {
               display: isDesktop ? 'none' : 'flex',
               backgroundColor: isDark ? '#121212' : '#FFFFFF',
@@ -99,7 +96,6 @@ export default function TabLayout() {
             tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
           }}
         >
-          {/* DASHBOARD PRINCIPAL */}
           <Tabs.Screen 
             name="index" 
             options={{ 
@@ -108,7 +104,6 @@ export default function TabLayout() {
             }} 
           />
 
-          {/* GRUPO PRESTAMOS - Usamos el index dentro de la carpeta */}
           <Tabs.Screen 
             name="prestamos/index" 
             options={{ 
@@ -117,13 +112,12 @@ export default function TabLayout() {
             }} 
           />
           
-          {/* Rutas ocultas de préstamos para que mantengan el Layout */}
+          {/* Rutas internas de préstamos */}
           <Tabs.Screen name="prestamos/bitacora" options={{ href: null }} />
           <Tabs.Screen name="prestamos/create" options={{ href: null }} />
           <Tabs.Screen name="prestamos/info" options={{ href: null }} />
           <Tabs.Screen name="prestamos/update" options={{ href: null }} />
 
-          {/* GRUPO USUARIOS */}
           <Tabs.Screen 
             name="usuarios/index" 
             options={{ 
@@ -132,7 +126,9 @@ export default function TabLayout() {
               tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? "people" : "people-outline"} size={24} color={color} /> 
             }} 
           />
+
           <Tabs.Screen name="usuarios/create" options={{ href: null }} />
+          
           <Tabs.Screen 
             name="perfil" 
             options={{ 
