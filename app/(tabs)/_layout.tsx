@@ -74,7 +74,6 @@ export default function TabLayout() {
           <SidebarItem name="/" label="Inicio" icon="home" />
           <SidebarItem name="/prestamos" label="Vales de Préstamo" icon="ticket" />
           <SidebarItem name="/usuarios" label="Gestión Usuarios" icon="people" adminOnly />
-          <SidebarItem name="/perfil" label="Mi Perfil" icon="person-circle" />
         </View>
       )}
 
@@ -96,6 +95,7 @@ export default function TabLayout() {
             tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
           }}
         >
+          {/* INICIO */}
           <Tabs.Screen 
             name="index" 
             options={{ 
@@ -104,6 +104,7 @@ export default function TabLayout() {
             }} 
           />
 
+          {/* VALES */}
           <Tabs.Screen 
             name="prestamos/index" 
             options={{ 
@@ -112,12 +113,13 @@ export default function TabLayout() {
             }} 
           />
           
-          {/* Rutas internas de préstamos */}
+          {/* RUTAS OCULTAS DE PRESTAMOS */}
           <Tabs.Screen name="prestamos/bitacora" options={{ href: null }} />
           <Tabs.Screen name="prestamos/create" options={{ href: null }} />
           <Tabs.Screen name="prestamos/info" options={{ href: null }} />
           <Tabs.Screen name="prestamos/update" options={{ href: null }} />
 
+          {/* USUARIOS */}
           <Tabs.Screen 
             name="usuarios/index" 
             options={{ 
@@ -129,13 +131,8 @@ export default function TabLayout() {
 
           <Tabs.Screen name="usuarios/create" options={{ href: null }} />
           
-          <Tabs.Screen 
-            name="perfil" 
-            options={{ 
-              title: 'Perfil', 
-              tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? "person-circle" : "person-circle-outline"} size={26} color={color} /> 
-            }} 
-          />
+          {/* ELIMINADO: Se quita la pantalla de Perfil de la navegación */}
+          <Tabs.Screen name="perfil" options={{ href: null }} />
         </Tabs>
       </View>
     </View>
