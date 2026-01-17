@@ -124,6 +124,8 @@ export default function InfoValeScreen() {
       <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="utf-8">
+          <title>Vale #${vale?.numeroFormulario}</title>
           <style>
             @page { size: letter; margin: 0; }
             body { font-family: 'Helvetica', Arial, sans-serif; margin: 0; padding: 0; background-color: white; }
@@ -132,7 +134,7 @@ export default function InfoValeScreen() {
             .divider { border-top: 1.5px dashed #999; width: 100%; position: relative; }
             .header { text-align: center; margin-bottom: 12px; border-bottom: 2.5px solid #1976D2; padding-bottom: 8px; }
             .title { font-size: 17px; color: #1976D2; font-weight: bold; letter-spacing: 0.5px; }
-            .info-table { width: 100%; margin-bottom: 12px; border: 1px solid #eee; padding: 10px; border-radius: 5px; }
+            .info-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #eee; padding: 10px; border-radius: 5px; }
             .label { font-size: 9px; color: #333; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 1px; }
             .value { font-size: 11px; font-weight: bold; color: #000; }
             .items-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
@@ -143,17 +145,9 @@ export default function InfoValeScreen() {
             .name-placeholder { font-size: 10px; font-weight: bold; color: #333; margin-top: 5px; text-transform: uppercase; }
             .sig-line { border-top: 1.2px solid #000; width: 80%; margin: 0 auto; }
             .watermark { 
-              position: absolute; 
-              top: 15px; 
-              right: 15px; 
-              font-size: 18px; 
-              font-weight: 900; 
-              color: rgba(0,0,0,0.35); 
-              border: 3px solid rgba(0,0,0,0.35); 
-              padding: 5px 15px; 
-              border-radius: 4px; 
-              z-index: 10;
-              text-transform: uppercase;
+              position: absolute; top: 15px; right: 15px; font-size: 18px; font-weight: 900; 
+              color: rgba(0,0,0,0.35); border: 3px solid rgba(0,0,0,0.35); 
+              padding: 5px 15px; border-radius: 4px; z-index: 10; text-transform: uppercase;
             }
           </style>
         </head>
@@ -169,21 +163,52 @@ export default function InfoValeScreen() {
 
     try {
       if (Platform.OS === 'web') {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
-        if (iframeDoc) {
-          iframeDoc.open();
-          iframeDoc.write(htmlContent);
-          iframeDoc.close();
-          setTimeout(() => {
-            iframe.contentWindow?.focus();
-            iframe.contentWindow?.print();
-            document.body.removeChild(iframe);
-          }, 500);
+        // Solución específica para Chrome Android y Navegadores Web
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        
+        // Detectar si es móvil
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if (isMobile) {
+          // En móviles abrimos en pestaña nueva para que Chrome no imprima la pantalla de atrás
+          const newWindow = window.open(url, '_blank');
+          if (newWindow) {
+            newWindow.onload = () => {
+              newWindow.print();
+            };
+          } else {
+            Alert.alert('Ventana bloqueada', 'Por favor permite las ventanas emergentes para imprimir.');
+          }
+        } else {
+          // En Desktop usamos el iframe invisible (funciona bien en Firefox/Chrome PC)
+          const iframe = document.createElement('iframe');
+          iframe.style.position = 'fixed';
+          iframe.style.right = '0';
+          iframe.style.bottom = '0';
+          iframe.style.width = '0';
+          iframe.style.height = '0';
+          iframe.style.border = '0';
+          document.body.appendChild(iframe);
+          
+          const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
+          if (iframeDoc) {
+            iframeDoc.open();
+            iframeDoc.write(htmlContent);
+            iframeDoc.close();
+            
+            iframe.onload = () => {
+              iframe.contentWindow?.focus();
+              iframe.contentWindow?.print();
+              setTimeout(() => {
+                document.body.removeChild(iframe);
+                URL.revokeObjectURL(url);
+              }, 1000);
+            };
+          }
         }
       } else {
+        // App Nativa
         const { uri } = await Print.printToFileAsync({ html: htmlContent });
         await Sharing.shareAsync(uri, {
           mimeType: 'application/pdf',
@@ -258,7 +283,6 @@ export default function InfoValeScreen() {
                   <View key={index} style={[styles.insumoRow, { backgroundColor: isDark ? '#1E1E1E' : '#FFF', borderColor: isDark ? '#333' : '#E0E0E0' }]}>
                     <View style={styles.insumoMain}>
                       <ThemedText type="defaultSemiBold">{item.descripcion}</ThemedText>
-                      {/* CAMBIO AQUÍ: Cantidad y Unidad de Medida con etiquetas explícitas */}
                       <ThemedText style={styles.insumoDetail}>
                         <ThemedText style={{ fontWeight: 'bold' }}>Cant:</ThemedText> {item.cantidad} | <ThemedText style={{ fontWeight: 'bold' }}>U.M:</ThemedText> {item.unidadMedida}
                       </ThemedText>
@@ -310,13 +334,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 20,
   },
-  desktopRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  desktopColumn: {
-    flex: 1,
-  },
+  desktopRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  desktopColumn: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerApp: { 
     flexDirection: 'row', 
@@ -350,16 +369,9 @@ const styles = StyleSheet.create({
   itemBadge: { backgroundColor: '#F0F0F0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   itemBadgeText: { fontSize: 10, color: '#666', fontWeight: 'bold' },
   firmaContainer: { marginTop: 10, gap: 25 },
-  firmaContainerPC: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 15,
-    marginTop: 20
-  },
+  firmaContainerPC: { flexDirection: 'row', justifyContent: 'space-between', gap: 15, marginTop: 20 },
   firmaBox: { alignItems: 'center', flex: 1 },
   nombreFirma: { fontSize: 11, fontWeight: 'bold', color: '#666', marginTop: 10, textTransform: 'uppercase', textAlign: 'center' },
   firmaLineApp: { width: '90%', borderBottomWidth: 1, height: 45 },
-  insumosGridPC: {
-    maxHeight: 500,
-  }
+  insumosGridPC: { maxHeight: 500 }
 });
